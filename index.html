@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matilda 20 – zadání rekonstrukce</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: technický list. Úzký sloupec textu, výkresy na celou šířku listu, kóty v mono písmu. */
+:root{
+  --paper:#f3f5f7; --sheet:#ffffff; --ink:#15222e; --muted:#5b6b7a; --line:#cfd8e0;
+  --hull:#2f7fb8; --hull-soft:#dcebf5; --draft:#b4532a; --sail:#f7f8f9; --water:#e6f0f6;
+  --display:"Archivo Narrow","Arial Narrow",Arial,sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0e161d; --sheet:#15202a; --ink:#e6edf2; --muted:#93a4b3; --line:#2b3a47;
+  --hull:#4f9fd6; --hull-soft:#1c3345; --draft:#e08a5f; --sail:#22303c; --water:#132633; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#0e161d; --sheet:#15202a; --ink:#e6edf2; --muted:#93a4b3; --line:#2b3a47;
+  --hull:#4f9fd6; --hull-soft:#1c3345; --draft:#e08a5f; --sail:#22303c; --water:#132633; color-scheme:dark;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.55 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 64px}
+header.top{padding:36px 0 22px;border-bottom:2px solid var(--ink);display:flex;flex-wrap:wrap;gap:16px 40px;align-items:flex-end;justify-content:space-between}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font:600 clamp(34px,6vw,56px)/1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 span{color:var(--hull)}
+.titleblock{font:400 13px/1.5 var(--mono);border:1px solid var(--line);background:var(--sheet);display:grid;grid-template-columns:auto auto}
+.titleblock div{padding:5px 12px;border-bottom:1px solid var(--line)}
+.titleblock div:nth-child(odd){color:var(--muted);border-right:1px solid var(--line)}
+.titleblock div:nth-last-child(-n+2){border-bottom:0}
+nav{display:flex;flex-wrap:wrap;gap:6px 18px;padding:12px 0;font:500 13px/1 var(--mono);border-bottom:1px solid var(--line)}
+nav a{color:var(--ink);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
+nav a:hover,nav a:focus-visible{border-color:var(--hull);outline:none}
+section{padding-top:44px}
+h2{font:600 26px/1.15 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;text-wrap:balance}
+h2 small{font:500 12px/1 var(--mono);color:var(--hull)}
+.lead{color:var(--muted);max-width:66ch;margin:0 0 18px}
+.sheet{background:var(--sheet);border:1px solid var(--line);padding:18px}
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--mono);fill:var(--ink)}
+.dim{stroke:var(--draft);stroke-width:1;fill:none}
+.dimt{fill:var(--draft)!important;font-size:15px;font-weight:500}
+.big .dimt{font-size:22px}.big .lbl{font-size:18px}
+.lbl{font-size:13px;fill:var(--muted)!important}
+.note{font:400 13px/1.5 var(--body);color:var(--muted);margin:12px 0 0;max-width:70ch}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11.5px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tscroll{overflow-x:auto}
+.sw{display:inline-block;width:10px;height:10px;margin-right:8px;border:1px solid var(--ink)}
+ol.scope{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:s}
+ol.scope li{counter-increment:s;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--hull);padding:14px 16px 14px 58px;position:relative}
+ol.scope li::before{content:counter(s,decimal-leading-zero);position:absolute;left:16px;top:14px;font:500 15px/1.4 var(--mono);color:var(--hull)}
+ol.scope b{font-weight:600}
+ol.scope p{margin:4px 0 0;color:var(--muted);font-size:14.5px;max-width:70ch}
+.todo{display:inline-block;font:500 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--draft);border:1px solid var(--draft);padding:3px 6px;margin-left:8px;vertical-align:2px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.gallery figure{margin:0;background:var(--sheet);border:1px solid var(--line)}
+.gallery button{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in}
+.gallery button:focus-visible{outline:3px solid var(--hull);outline-offset:2px}
+.gallery img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.gallery video{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:#000}
+.gallery figcaption{padding:9px 11px 11px;font-size:13.5px;line-height:1.4}
+.gallery figcaption span{display:block;font:500 11px/1.4 var(--mono);color:var(--hull);text-transform:uppercase;letter-spacing:.05em}
+dialog{border:0;padding:0;background:transparent;max-width:96vw;max-height:96vh}
+dialog::backdrop{background:rgba(5,12,18,.88)}
+dialog img{display:block;max-width:96vw;max-height:86vh;margin:0 auto}
+dialog p{color:#fff;font-size:14px;text-align:center;margin:10px 0 0}
+dialog button{position:fixed;top:14px;right:16px;font:500 14px var(--mono);background:#fff;color:#111;border:0;padding:8px 12px;cursor:pointer}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+footer a{color:var(--hull)}
+footer ul{margin:6px 0 0;padding-left:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <p class="eyebrow">Zadání pro Gimi Yacht · podklady k rekonstrukci</p>
+    <h1>Matilda <span>20</span></h1>
+  </div>
+  <div class="titleblock">
+    <div>Typ</div><div>kajutová plachetnice, zvedací kýl</div>
+    <div>Reg. číslo</div><div>303477</div>
+    <div>Majitel</div><div>Michal Chudáček, Brno</div>
+    <div>Stav k</div><div>11. 11. 2026, loď na vleku</div>
+  </div>
+</header>
+
+<nav aria-label="Obsah">
+  <a href="#bokorys">Bokorys</a><a href="#rozmery">Rozměry lodi</a><a href="#plachty">Kosatka</a><a href="#plan">Plán</a><a href="#fotky">Fotky</a><a href="#videa">Videa</a>
+</nav>
+
+<section id="bokorys">
+  <h2><small>01</small>Bokorys a oplachtění</h2>
+  <p class="lead">Rozměry jsou orientační, podle publikovaných údajů typu. Kýl je nakreslen spuštěný.</p>
+  <div class="two">
+    <div class="sheet">
+      <svg class="big" viewBox="40 50 800 1050" role="img" aria-label="Bokorys Matildy 20 s kótami: délka 5,94 m, vodoryska 4,98 m, ponor 1,27 m, I 7,16 m, J 2,44 m, P 6,34 m, E 2,44 m">
+        <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9" fill="none" stroke="var(--draft)" stroke-width="1.4"/></marker></defs>
+        <!-- voda -->
+        <rect x="40" y="880" width="800" height="140" fill="var(--water)"/>
+        <line x1="40" y1="880" x2="840" y2="880" stroke="var(--hull)" stroke-width="1" stroke-dasharray="10 5"/>
+        <!-- hlavní plachta -->
+        <path d="M472 100 L472 734 L228 734 Q330 400 472 100 Z" fill="var(--sail)" stroke="var(--ink)" stroke-width="1.5"/>
+        <!-- kosatka 100 % -->
+        <path d="M710 790 L486 140 L458 778 Z" fill="var(--sail)" stroke="var(--ink)" stroke-width="1.5"/>
+        <!-- takeláž -->
+        <line x1="716" y1="796" x2="472" y2="89" stroke="var(--ink)" stroke-width="1"/>
+        <line x1="472" y1="89" x2="134" y2="812" stroke="var(--ink)" stroke-width="1"/>
+        <line x1="472" y1="89" x2="462" y2="806" stroke="var(--ink)" stroke-width=".8"/>
+        <!-- stěžeň a ráhno -->
+        <rect x="468.5" y="85" width="7" height="680" fill="var(--ink)"/>
+        <rect x="222" y="734" width="250" height="7" fill="var(--ink)"/>
+        <!-- kýl s bulbem -->
+        <rect x="428" y="900" width="44" height="100" fill="var(--hull)" stroke="var(--ink)" stroke-width="1.5"/>
+        <ellipse cx="448" cy="996" rx="50" ry="11" fill="var(--hull)" stroke="var(--ink)" stroke-width="1.5"/>
+        <!-- kormidlo -->
+        <path d="M133 800 L118 800 L108 960 L138 960 L150 878 Z" fill="var(--hull-soft)" stroke="var(--ink)" stroke-width="1.5"/>
+        <!-- trup -->
+        <path d="M724 795 Q700 850 658 880 Q450 926 165 880 L130 815 Q430 818 724 795 Z" fill="var(--hull)" stroke="var(--ink)" stroke-width="1.5"/>
+        <!-- nástavba -->
+        <path d="M278 815 L292 772 Q470 752 600 768 L652 800 Q430 818 278 815 Z" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.5"/>
+        <rect x="430" y="778" width="120" height="16" rx="6" fill="var(--ink)" opacity=".75"/>
+        <!-- příďový a záďový koš -->
+        <path d="M722 795 L716 766 L640 770 L640 798" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+        <path d="M134 814 L134 786 L176 786 L176 815" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+
+        <!-- kóty -->
+        <g class="dim">
+          <line x1="130" y1="1075" x2="724" y2="1075" marker-start="url(#a)" marker-end="url(#a)"/>
+          <line x1="130" y1="825" x2="130" y2="1082"/><line x1="724" y1="805" x2="724" y2="1082"/>
+          <line x1="165" y1="1040" x2="658" y2="1040" marker-start="url(#a)" marker-end="url(#a)"/>
+          <line x1="165" y1="890" x2="165" y2="1047"/><line x1="658" y1="890" x2="658" y2="1047"/>
+          <line x1="560" y1="880" x2="560" y2="1007" marker-start="url(#a)" marker-end="url(#a)"/>
+          <line x1="500" y1="1007" x2="568" y2="1007"/>
+          <line x1="790" y1="89" x2="790" y2="805" marker-start="url(#a)" marker-end="url(#a)"/>
+          <line x1="480" y1="89" x2="797" y2="89"/><line x1="730" y1="805" x2="797" y2="805"/>
+          <line x1="472" y1="838" x2="716" y2="838" marker-start="url(#a)" marker-end="url(#a)"/>
+          <line x1="205" y1="100" x2="205" y2="734" marker-start="url(#a)" marker-end="url(#a)"/>
+          <line x1="198" y1="100" x2="465" y2="100"/><line x1="198" y1="734" x2="220" y2="734"/>
+          <line x1="228" y1="756" x2="472" y2="756" marker-start="url(#a)" marker-end="url(#a)"/>
+        </g>
+        <text class="dimt" x="427" y="1068" text-anchor="middle">LOA 5,94 m</text>
+        <text class="dimt" x="330" y="1033" text-anchor="middle">LWL 4,98 m</text>
+        <text class="dimt" x="570" y="950">ponor 1,27 m</text>
+        <text class="dimt" x="784" y="450" text-anchor="middle" transform="rotate(-90 784 450)">I 7,16 m</text>
+        <text class="dimt" x="594" y="856" text-anchor="middle" style="fill:#fff!important">J 2,44 m</text>
+        <text class="dimt" x="199" y="420" text-anchor="middle" transform="rotate(-90 199 420)">P 6,34 m</text>
+        <text class="dimt" x="350" y="751" text-anchor="middle">E 2,44 m</text>
+        <text class="lbl" x="405" y="560" text-anchor="middle">hlavní</text><text class="lbl" x="405" y="577" text-anchor="middle">plachta</text>
+        <text class="lbl" x="550" y="640" text-anchor="middle">kosatka</text>
+        <text class="lbl" x="620" y="380" transform="rotate(71 620 380)">stěh 7,56 m</text>
+        <text class="lbl" x="50" y="874">čára ponoru</text>
+      </svg>
+    </div>
+    <div>
+      <div class="sheet tscroll">
+        <table>
+          <tr><th>Kóta</th><th>Význam</th><th class="n">m</th></tr>
+          <tr><td>I</td><td>výška předního trojúhelníku</td><td class="n">7,16</td></tr>
+          <tr><td>J</td><td>základna předního trojúhelníku</td><td class="n">2,44</td></tr>
+          <tr><td>P</td><td>přední lík hlavní plachty</td><td class="n">6,34</td></tr>
+          <tr><td>E</td><td>spodní lík hlavní plachty</td><td class="n">2,44</td></tr>
+          <tr><td>stěh</td><td>přední stěh, dopočet z I a J</td><td class="n">7,56</td></tr>
+        </table>
+      </div>
+      <p class="note">Takeláž: topový šalupa (masthead sloop), stěžeň na nástavbě, jeden pár sálingů. Tvar trupu, nástavby a kormidla je schematický: přesně jsou vyneseny jen okótované rozměry. Skutečné míry lodi 303477 je potřeba před výrobou dílů přeměřit.</p>
+    </div>
+  </div>
+</section>
+
+<section id="rozmery">
+  <h2><small>02</small>Rozměry lodi</h2>
+  <p class="lead">Orientační údaje typu Matilda 20 (konstruktér Robert Tucker, loděnice Ouyang Boat Works, Kanada, výroba od 1971).</p>
+  <div class="two">
+    <div class="sheet tscroll">
+      <table>
+        <tr><th>Parametr</th><th class="n">Hodnota</th></tr>
+        <tr><td>Délka přes vše (LOA)</td><td class="n">5,94 m</td></tr>
+        <tr><td>Délka na vodorysce (LWL)</td><td class="n">4,98 m</td></tr>
+        <tr><td>Šířka</td><td class="n">2,41 m</td></tr>
+        <tr><td>Ponor, kýl spuštěný</td><td class="n">1,27 m</td></tr>
+        <tr><td>Ponor, kýl zvednutý</td><td class="n">0,23 m</td></tr>
+        <tr><td>Výtlak</td><td class="n">703 kg</td></tr>
+        <tr><td>Balast (údaj výrobce)</td><td class="n">136 kg</td></tr>
+        <tr><td>Výška v kajutě</td><td class="n">1,27 m</td></tr>
+      </table>
+    </div>
+    <div class="sheet tscroll">
+      <table>
+        <tr><th>Konstrukce</th><th>Popis</th></tr>
+        <tr><td>Trup</td><td>laminát, kulatý bok, dřevěné doplňky</td></tr>
+        <tr><td>Kýl</td><td>zvedací ocelová deska s bulbem, zdvih lankem přes kladky v kýlové skříni; vlastní výpočet hmotnosti cca 106 kg (bulb + plech S235)</td></tr>
+        <tr><td>Kormidlo</td><td>zavěšené na zrcadle, rumpál</td></tr>
+        <tr><td>Motor</td><td>závěsný Mercury na konzole na zrcadle</td></tr>
+        <tr><td>Paluba</td><td>bílý laminát, lepená krytina EVA v imitaci teaku</td></tr>
+        <tr><td>Přední plachta</td><td>na raksách, bez rolfoku</td></tr>
+        <tr><td>Barva trupu</td><td>modrá; nový odstín RAL 5012</td></tr>
+        <tr><td>Rok výroby</td><td>doplnit podle dokladů lodi</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="plachty">
+  <h2><small>03</small>Kosatka</h2>
+  <p class="lead">Rozměry základní kosatky jsou orientační, podle údajů typu. Loď nemá rolfok: přední plachty se nasazují na stěh raksami.</p>
+  <div class="sheet tscroll">
+    <table>
+      <tr><th>Plachta</th><th class="n">Přední lík</th><th class="n">Spodní lík</th><th class="n">Zadní lík</th><th class="n">LP</th><th class="n">Plocha</th></tr>
+      <tr><td>Kosatka (základní, 100 %)</td><td class="n">6,45 m</td><td class="n">2,60 m</td><td class="n">6,17 m</td><td class="n">2,48 m</td><td class="n">8,0 m²</td></tr>
+    </table>
+  </div>
+  <p class="note">Plocha je přepočet z ft² (zdroj Good Old Boat). Přední trojúhelník podle kót: I × J / 2 = 8,73 m². Před zadáním nové plachty změřit starou kosatku a skutečnou délku stěhu.</p>
+</section>
+
+<section id="plan">
+  <h2><small>04</small>Plán lodi (půdorys)</h2>
+  <p class="lead">Schéma uspořádání podle popisu typu: čtyři lůžka, kuchyňka na pravoboku, WC na levoboku, průchod do přídě přes WC.</p>
+  <div class="sheet">
+    <svg viewBox="60 30 740 360" role="img" aria-label="Půdorys Matildy 20: příďová kajuta s lůžkem do V, WC vlevo, kuchyňka vpravo, kýlová skříň uprostřed, dvě lůžka pod boky kokpitu, kokpit na zádi">
+      <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9" fill="none" stroke="var(--draft)" stroke-width="1.4"/></marker></defs>
+      <clipPath id="h"><path d="M136 116 C252 62 478 57 712 200 C478 343 252 338 136 284 Z"/></clipPath>
+      <path d="M130 112 C250 55 480 50 724 200 C480 350 250 345 130 288 Z" fill="var(--hull-soft)" stroke="var(--ink)" stroke-width="2"/>
+      <g clip-path="url(#h)">
+      <!-- příďová kajuta -->
+      <path d="M560 112 L560 288 Q650 250 700 200 Q650 150 560 112 Z" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text class="lbl" x="612" y="196" text-anchor="middle">lůžko</text><text class="lbl" x="612" y="212" text-anchor="middle">do V</text>
+      <!-- WC levobok -->
+      <rect x="498" y="94" width="56" height="74" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text class="lbl" x="526" y="136" text-anchor="middle">WC</text>
+      <!-- kuchyňka pravobok -->
+      <path d="M430 240 L554 240 L554 306 Q480 320 400 322 L400 280 L430 280 Z" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text class="lbl" x="482" y="286" text-anchor="middle">kuchyňka</text>
+      <!-- kýlová skříň + stěžeň -->
+      <rect x="420" y="192" width="64" height="16" fill="var(--hull)" stroke="var(--ink)" stroke-width="1.2"/>
+      <circle cx="476" cy="200" r="5" fill="var(--ink)"/>
+      <text class="lbl" x="452" y="184" text-anchor="middle">kýlová skříň</text>
+      <!-- lůžka pod kokpitem -->
+      <path d="M150 104 Q260 76 390 76 L390 128 L150 128 Z" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.2"/>
+      <path d="M150 296 Q260 324 390 324 L390 272 L150 272 Z" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.2"/>
+      <text class="lbl" x="270" y="108" text-anchor="middle">lůžko, levobok</text>
+      <text class="lbl" x="270" y="304" text-anchor="middle">lůžko, pravobok</text>
+      </g>
+      <!-- kokpit -->
+      <rect x="150" y="140" width="180" height="120" fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="6 4"/>
+      <text class="lbl" x="240" y="204" text-anchor="middle">kokpit</text>
+      <line x1="330" y1="170" x2="330" y2="230" stroke="var(--ink)" stroke-width="3"/>
+      <text class="lbl" x="372" y="204" text-anchor="middle">vstup</text>
+      <!-- kormidlo -->
+      <line x1="108" y1="200" x2="130" y2="200" stroke="var(--ink)" stroke-width="5"/>
+      <!-- kóty -->
+      <g class="dim">
+        <line x1="130" y1="365" x2="724" y2="365" marker-start="url(#b)" marker-end="url(#b)"/>
+        <line x1="130" y1="296" x2="130" y2="372"/><line x1="724" y1="210" x2="724" y2="372"/>
+        <line x1="760" y1="80" x2="760" y2="320" marker-start="url(#b)" marker-end="url(#b)"/>
+        <line x1="420" y1="80" x2="767" y2="80"/><line x1="420" y1="320" x2="767" y2="320"/>
+      </g>
+      <text class="dimt" x="427" y="358" text-anchor="middle">5,94 m</text>
+      <text class="dimt" x="754" y="200" text-anchor="middle" transform="rotate(-90 754 200)">2,41 m</text>
+      <text class="lbl" x="745" y="60" text-anchor="end">příď →</text>
+      <text class="lbl" x="110" y="60">← záď</text>
+    </svg>
+    <p class="note">Schéma, ne dílenský výkres. Rozmístění vychází z popisu sériové lodi; skutečný interiér této lodi se může lišit a je potřeba ho ověřit na místě.</p>
+  </div>
+</section>
+
+<section id="fotky">
+  <h2><small>05</small>Fotky</h2>
+  <p class="lead">Kliknutím se fotka zvětší.</p>
+  <div class="gallery" id="g"></div>
+</section>
+
+<section id="videa">
+  <h2><small>06</small>Videa</h2>
+  <p class="lead">Krátké záběry lodi na vleku a za plavby.</p>
+  <div class="gallery">
+    <figure><video controls preload="none" playsinline poster="video/v01.jpg" src="video/v01.mp4" aria-label="Loď na vleku u vody, celkový pohled (duben 2026)"></video><figcaption><span>V1 · Loď</span>Loď na vleku u vody, celkový pohled (duben 2026)</figcaption></figure>
+    <figure><video controls preload="none" playsinline poster="video/v02.jpg" src="video/v02.mp4" aria-label="Za plavby: zábradlí, hlavní plachta, záď s motorem"></video><figcaption><span>V2 · Plavba</span>Za plavby: zábradlí, hlavní plachta, záď s motorem</figcaption></figure>
+    <figure><video controls preload="none" playsinline poster="video/v03.jpg" src="video/v03.mp4" aria-label="Kokpit, vstup do kajuty a ráhno za plavby"></video><figcaption><span>V3 · Kokpit</span>Kokpit, vstup do kajuty a ráhno za plavby</figcaption></figure>
+    <figure><video controls preload="none" playsinline poster="video/v04.jpg" src="video/v04.mp4" aria-label="Hlavní plachta, kosatka a krytina paluby za plavby"></video><figcaption><span>V4 · Plachty</span>Hlavní plachta, kosatka a krytina paluby za plavby</figcaption></figure>
+  </div>
+</section>
+
+<footer>
+  Zdroje technických údajů:
+  <ul>
+    <li><a href="https://en.wikipedia.org/wiki/Matilda_20">Wikipedia: Matilda 20</a> (rozměry, výtlak, uspořádání interiéru)</li>
+    <li><a href="https://goodoldboat.com/saildata/boat/matilda-20/">Good Old Boat: Matilda 20 sail data</a> (rozměry plachet)</li>
+    <li><a href="https://www.mauripro.com/collections/sailboat-data-matilda-20">MauriPro: Matilda 20 rig dimensions</a> (I, J, P, E)</li>
+  </ul>
+</footer>
+</div>
+
+<dialog id="d"><button type="button" id="x">Zavřít</button><img id="di" alt=""><p id="dp"></p></dialog>
+<script>
+const F=[
+["Trup","Pravobok na jeřábu, celkový stav nátěru trupu"],
+["Trup","Levobok na jeřábu, kýl spuštěný"],
+["Dno","Mytí dna po vytažení, 9. 11. 2026"],
+["Kýl","Kýl v šachtě zespodu, koroze na hraně šachty"],
+["Kýl","Kýlová skříň zevnitř: lanka a kladky zdvihu, praskliny v nátěru"],
+["Kýl","Uchycení lanka zdvihu kýlu"],
+["Barva","Vzorník na trupu: RAL 5012 a RAL 5013; nahoře oděrná lišta"],
+["Paluba","Posuvný poklop s oloupaným lakem"],
+["Paluba","Loď pod plachtami: krytina paluby, kokpit, motor"],
+["Plachty","Hlavní plachta a kosatka zespodu"],
+["Plachty","Hlavní plachta a kosatka, pohled od ráhna"],
+["Plachty","Hlavní plachta na ráhně v přístavu"],
+["Paluba","Bok kokpitu: vinšna a zábradlí"]];
+const g=document.getElementById('g'),d=document.getElementById('d'),di=document.getElementById('di'),dp=document.getElementById('dp');
+F.forEach((f,i)=>{const n=String(i+1).padStart(2,'0'),s='foto/f'+String(i<5?i+1:i+2).padStart(2,'0')+'.jpg';
+  const fig=document.createElement('figure');
+  fig.innerHTML='<button type="button" aria-label="Zvětšit fotku '+n+'"><img loading="lazy" src="'+s+'" alt="'+f[1]+'"></button><figcaption><span>'+n+' · '+f[0]+'</span>'+f[1]+'</figcaption>';
+  fig.querySelector('button').addEventListener('click',()=>{di.src=s;di.alt=f[1];dp.textContent=n+' · '+f[1];d.showModal();});
+  g.appendChild(fig);});
+document.getElementById('x').addEventListener('click',()=>d.close());
+d.addEventListener('click',e=>{if(e.target===d)d.close();});
+</script>
+</body>
+</html>
